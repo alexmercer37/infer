@@ -31,9 +31,15 @@ public:
     void Time();
     void perf();
     void batch_inference();
+<<<<<<< HEAD
     yolo::BoxArray single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
     yolo::BoxArray seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
     void detect_boxes(yolo::BoxArray &bboxes, cv::Mat rgb, cv::Mat &cv_depth, k4a::transformation &k4aTransformation, k4a::calibration &k4aCalibration);
+=======
+    std::shared_ptr<cv::Mat> single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo, cv::KalmanFilter &kf);
+    cv::Mat *seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
+
+>>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
     void setYolo(std::shared_ptr<yolo::Infer> new_yolo)
     {
         new_yolo = yolo;

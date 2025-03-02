@@ -97,3 +97,55 @@ int main()
   }
   return 0;
 }
+// using namespace cv;
+// using namespace std;
+
+// int main()
+// {
+//   // 假设已经有一个VideoCapture对象cap和一个背景减法对象backSub
+//   VideoCapture cap(0);                                                  // 打开默认摄像头
+//   Ptr<BackgroundSubtractor> backSub = createBackgroundSubtractorMOG2(); // 使用MOG2算法作为示例
+
+//   Mat frame, fgMask, fgMaskDilated, fgMaskBlurred, finalMask;
+
+//   if (!cap.isOpened())
+//   {
+//     cout << "Error: Cannot open camera." << endl;
+//     return -1;
+//   }
+
+//   while (true)
+//   {
+//     cap >> frame; // 从摄像头捕获一帧
+
+//     if (frame.empty())
+//     {
+//       break; // 如果未捕获到帧，则退出循环
+//     }
+
+//     // 应用背景减法
+//     backSub->apply(frame, fgMask);
+
+//     // 膨胀操作
+//     dilate(fgMask, fgMaskDilated, Mat(), Point(-1, -1), 3); // 假设使用3x3的核
+
+//     // 高斯模糊
+//     GaussianBlur(fgMaskDilated, fgMaskBlurred, Size(15, 15), 0);
+
+//     // Otsu阈值化
+//     double thresh;
+//     threshold(fgMaskBlurred, finalMask, 0, 255, THRESH_BINARY + THRESH_OTSU);
+
+//     // 显示结果
+//     // imshow("Frame", frame);
+//     imshow("Final Mask", finalMask);
+
+//     waitKey(30);
+//   }
+
+//   // 释放资源
+//   cap.release();
+//   destroyAllWindows();
+
+//   return 0;
+// }

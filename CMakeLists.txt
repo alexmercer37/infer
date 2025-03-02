@@ -27,7 +27,11 @@ set(cpp_srcs
     src/tcp.cpp
     src/can_send.cpp
     src/realsense.cpp
+<<<<<<< HEAD
     src/pcl.cpp
+=======
+    src/filter.cpp
+>>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 )  
 
 find_package(CUDA REQUIRED)

@@ -22,9 +22,10 @@ private:
 
 public:
     void
-    realsense_init(rs2::pipeline &pipe);
-    void realsense_update(rs2::pipeline &pipe, rs2::frameset &frames, rs2::align &align_to_color);
-    cv::Mat *get_realsense_depth(rs2::frameset &frames);
-    cv::Mat *get_realsense_rgb(rs2::frameset &frames);
+    realsense_init(rs2::pipeline pipe);
+    void realsense_update(rs2::pipeline pipe, rs2::frameset &frames, rs2::align align_to_color);
+    cv::Mat *get_realsense_depth(rs2::frameset frames);
+    cv::Mat *get_realsense_rgb(rs2::frameset frames);
+    void detect_realsense();
 };
 #endif

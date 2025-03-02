@@ -11,6 +11,8 @@
 
 #include "../inc/detect.hpp"
 
+extern Filter *filter;
+
 yolo::Image cvimg(const cv::Mat &image)
 {
     return yolo::Image(image.data, image.cols, image.rows);
@@ -96,7 +98,11 @@ void Detect::batch_inference()
     }
 }
 
+<<<<<<< HEAD
 yolo::BoxArray Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
+=======
+std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo, cv::KalmanFilter &kf)
+>>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 {
 
     auto objs = yolo->forward(yolo::Image((*image).data, (*image).cols, (*image).rows));
@@ -123,6 +129,13 @@ yolo::BoxArray Detect::single_inference(std::shared_ptr<cv::Mat> image, std::sha
         }
         cv::Scalar color = colors[obj.class_label];
         cv::rectangle(*image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), color, 5);
+        // cv::circle(*image, cv::Point(obj.left + (obj.right - obj.left) / 2, obj.bottom + (obj.top - obj.bottom) / 2), 5, cv::Scalar(255, 0, 0), -1);
+
+        std::vector<cv::Point2f> measurements;
+        measurements.push_back(cv::Point2f(obj.left + (obj.right - obj.left) / 2, obj.bottom + (obj.top - obj.bottom) / 2));
+        filter->filter_predict(measurements, kf, *image);
+
+        std::cout << "success!" << std::endl;
 #endif
 
         // auto name = cocolabels[obj.class_label];

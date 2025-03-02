@@ -10,8 +10,9 @@
  */
 #include "../inc/realsense.hpp"
 
-void RealSense::realsense_init(rs2::pipeline &pipe)
+void RealSense::realsense_init(rs2::pipeline pipe)
 {
+
     rs2::config cfg;
 
     cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 90);
@@ -43,14 +44,14 @@ void RealSense::realsense_init(rs2::pipeline &pipe)
     }
 }
 
-void RealSense::realsense_update(rs2::pipeline &pipe, rs2::frameset &frames, rs2::align &align_to_color)
+void RealSense::realsense_update(rs2::pipeline pipe, rs2::frameset &frames, rs2::align align_to_color)
 {
 
     frames = pipe.wait_for_frames();
     frames = align_to_color.process(frames);
 }
 
-cv::Mat *RealSense::get_realsense_depth(rs2::frameset &frames)
+cv::Mat *RealSense::get_realsense_depth(rs2::frameset frames)
 {
     rs2::depth_frame depth_stream = frames.get_depth_frame();
 
@@ -62,7 +63,7 @@ cv::Mat *RealSense::get_realsense_depth(rs2::frameset &frames)
     return depth_image;
 }
 
-cv::Mat *RealSense::get_realsense_rgb(rs2::frameset &frames)
+cv::Mat *RealSense::get_realsense_rgb(rs2::frameset frames)
 {
     rs2::video_frame color_stream = frames.get_color_frame();
 
@@ -72,4 +73,16 @@ cv::Mat *RealSense::get_realsense_rgb(rs2::frameset &frames)
     cv::Mat *color_image = new cv::Mat(cv::Size(width, height), CV_8UC3, (void *)color_stream.get_data(), cv::Mat::AUTO_STEP);
 
     return color_image;
+}
+
+void RealSense::detect_realsense()
+{
+    rs2::context context;
+    rs2::device_list devs = context.query_devices();
+    int device_num = devs.size();
+    std::cout << "获取相机设备号：" << device_num << std::endl;
+    if (!device_num)
+    {
+        throw std::runtime_error("Error: camera do not update!");
+    }
 }

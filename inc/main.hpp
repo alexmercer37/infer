@@ -21,6 +21,7 @@
 #include "OpencvHead.hpp"
 #include "detect.hpp"
 #include "uart.hpp"
+#include "filter.hpp"
 #include "camera.hpp"
 #include "pthread.hpp"
 #include "tcp.hpp"
