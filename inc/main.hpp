@@ -25,6 +25,8 @@
 #include "pthread.hpp"
 #include "tcp.hpp"
 #include "realsense.hpp"
+#include "pcl.hpp"
+#include "PclHead.hpp"
 #include <k4a/k4a.hpp>
 #include <k4arecord/record.h>
 #include <k4arecord/playback.h>
@@ -52,8 +54,8 @@
 
 #define test_tcp
 #define test_uart
-#define use_realsense
-// #define use_k4a
-// #define use_detect
+// #define use_realsense
+#define use_k4a
+#define use_detect
 
 #endif

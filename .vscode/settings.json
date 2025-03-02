@@ -106,7 +106,12 @@
         "any": "cpp",
         "strstream": "cpp",
         "source_location": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "cfenv": "cpp",
+        "stdfloat": "cpp",
+        "core": "cpp",
+        "numericaldiff": "cpp",
+        "*.ipp": "cpp"
     },
     "doxdocgen.generic.authorEmail": "3416181310@qq.com",
     "doxdocgen.file.fileTemplate": "@file {name}",

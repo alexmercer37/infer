@@ -12,6 +12,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 #include "main.hpp"
+#include "PclHead.hpp"
 #include <k4a/k4a.hpp>
 #include <k4arecord/record.h>
 #include <k4arecord/playback.h>
@@ -27,6 +28,7 @@ public:
     cv::Mat *getir(k4a::device &device, k4a::capture &capture, cv::Mat &cv_infrared, k4a::transformation &k4aTransformation);
     void stopCamera();
     void camera_detect(cv::Mat currFrame);
+    void Value_Mask_to_Pcl(pcl::PointCloud<pcl::PointXYZ> &cloud, yolo::BoxArray &objs);
 
 private:
     u_int32_t device_count;
@@ -42,6 +44,7 @@ private:
     cv::Mat cv_infrared;
     k4a::transformation k4aTransformation;
     k4a::calibration k4aCalibration;
+    k4a_calibration_camera_t color_intrinsics;
     cv::Mat pre_prame;
     int count = 0;
 };

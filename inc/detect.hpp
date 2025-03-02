@@ -13,6 +13,10 @@
 #define __INFER_H__
 
 #include "main.hpp"
+#include <k4a/k4a.hpp>
+#include <k4arecord/record.h>
+#include <k4arecord/playback.h>
+
 #define use_random_color
 
 static const char *cocolabels[] = {"red_ball", "blue_ball"};
@@ -27,9 +31,9 @@ public:
     void Time();
     void perf();
     void batch_inference();
-    std::shared_ptr<cv::Mat> single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
-    cv::Mat *seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
-
+    yolo::BoxArray single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
+    yolo::BoxArray seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo);
+    void detect_boxes(yolo::BoxArray &bboxes, cv::Mat rgb, cv::Mat &cv_depth, k4a::transformation &k4aTransformation, k4a::calibration &k4aCalibration);
     void setYolo(std::shared_ptr<yolo::Infer> new_yolo)
     {
         new_yolo = yolo;

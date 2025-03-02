@@ -11,11 +11,13 @@
 
 #include "../inc/main.hpp"
 #include "../inc/pthread.hpp"
+#include "../inc/PclHead.hpp"
 // #include <python3.12/Python.h>
 // #include <numpy/arrayobject.h>
 RealSense *realsense = new RealSense;
 Camera *camera = new Camera;
 Detect *detect = new Detect;
+Lcloud *lcloud = new Lcloud;
 
 cv::Mat rgb_frame, depth_frame;
 cv::Mat *rgb_ptr = new cv::Mat;
@@ -30,6 +32,12 @@ rs2::pipeline pipelines;
 rs2::frameset frame;
 rs2::align align_to_color(RS2_STREAM_COLOR);
 
+uint16_t *depth_data;
+uint16_t depth_width;
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_seg_ptr = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+std::shared_ptr<yolo::BoxArray> objs_ptr = std::make_shared<yolo::BoxArray>();
+
 void *pthread::k4aUpdate(void *argc)
 {
     camera->init_kinect(Device, capture, k4aTransformation, k4aCalibration);
@@ -39,7 +47,7 @@ void *pthread::k4aUpdate(void *argc)
     {
         // std::ostringstream filename;
 
-        // filename << "/home/nf/Downloads/getpicture/1/frame_" << std::setw(5) << std::setfill('0') << frame_count++ << ".jpg";
+        // filename << "/home/ddxy/Downloads/picture/frame_ " << std::setw(5) << std::setfill('0') << frame_count++ << ".jpg ";
 
         camera->picture_update(Device, capture);
 
@@ -53,6 +61,7 @@ void *pthread::k4aUpdate(void *argc)
         // camera->getAngel(Device);
 
         pthread_mutex_unlock(&buff_mutex);
+
         cv::cvtColor(*rgb_ptr, *rgb_ptr, cv::COLOR_BGRA2BGR);
 
         pthread_mutex_lock(&buff_mutex);
@@ -120,6 +129,9 @@ void *pthread::realsenseUpdate(void *argc)
         rgb_ptr->release();
         depth_ptr->release();
 
+        cv::imshow("dzx", *matBuff);
+        cv::waitKey(1);
+
         usleep(100);
     }
     pthread_exit(NULL);
@@ -127,7 +139,7 @@ void *pthread::realsenseUpdate(void *argc)
 
 void *pthread::create_infer(void *argc)
 {
-    auto yolo = yolo::load("/home/ddxy/Downloads/dxy_infer-master/workspace/engine/test.engine", yolo::Type::V8);
+    auto yolo = yolo::load("/home/ddxy/dxy_infer-master/workspace/engine/1.engine", yolo::Type::V8);
     if (yolo == nullptr)
     {
         throw std::runtime_error("Loading yolo failed");
@@ -139,14 +151,20 @@ void *pthread::create_infer(void *argc)
 
     while (1)
     {
-        while (!matBuff->empty())
+        while (!depthBuff->empty())
         {
             pthread_mutex_lock(&buff_mutex);
-            output = detect->single_inference(matBuff, yolo);
+            *objs_ptr = detect->single_inference(matBuff, yolo);
+
+            if (objs_ptr != nullptr)
+            {
+                detect->detect_boxes(*objs_ptr, *matBuff, *depthBuff, k4aTransformation, k4aCalibration);
+            }
+
             pthread_mutex_unlock(&buff_mutex);
             usleep(100);
 
-            cv::imshow("k4a", *output);
+            cv::imshow("k4a", *matBuff);
             cv::waitKey(1);
         }
     }
@@ -155,7 +173,7 @@ void *pthread::create_infer(void *argc)
 
 void *pthread::create_infer_seg(void *argc)
 {
-    auto yolo = yolo::load("/home/ddxy/Downloads/dxy_infer-master/workspace/engine/yolov8n-seg.b1.transd.engine", yolo::Type::V8Seg);
+    auto yolo = yolo::load("/home/ddxy/dxy_infer-master/workspace/engine/best.engine", yolo::Type::V8Seg);
     if (yolo == nullptr)
     {
         throw std::runtime_error("Loading yolo_seg failed");
@@ -164,26 +182,34 @@ void *pthread::create_infer_seg(void *argc)
 
     detect->setYolo(yolo);
     cv::Mat *output;
+    __u8 data;
 
     while (1)
     {
+        clock_t start, end;
+        auto yoloStart = std::chrono::system_clock::now();
+
         while (!matBuff->empty())
         {
             pthread_mutex_lock(&buff_mutex);
-            output = detect->seg_inference(matBuff, yolo);
+            *objs_ptr = detect->seg_inference(matBuff, yolo);
             pthread_mutex_unlock(&buff_mutex);
             usleep(100);
 
-            if (output != nullptr)
+            if (objs_ptr != nullptr)
             {
-                cv::imshow("seg", *output);
-                cv::waitKey(1);
+                camera->Value_Mask_to_Pcl(*cloud_seg_ptr, *objs_ptr);
+                // lcloud->getPLY(data, cloud_seg_ptr);
             }
             else
-                std::cout << "Error: seg_output is empty!" << std::endl;
+                std::cout << "Error: objs is empty!" << std::endl;
         }
 
         usleep(100);
+
+        auto yoloEnd = std::chrono::system_clock::now();
+        auto yoloDuration = std::chrono::duration_cast<std::chrono::microseconds>(yoloEnd - yoloStart);
+        std::cout << "yolo:" << double(yoloDuration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den << "s" << std::endl;
     }
     pthread_exit(NULL);
 }
@@ -210,7 +236,7 @@ void *pthread::usb_camera_infer(void *argc)
         capture.read(*frame);
 
         pthread_mutex_lock(&buff_mutex);
-        output = detect->single_inference(frame, yolo);
+        // output = detect->single_inference(frame, yolo);
         pthread_mutex_unlock(&buff_mutex);
         usleep(100);
 

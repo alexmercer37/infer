@@ -96,8 +96,9 @@ void Detect::batch_inference()
     }
 }
 
-std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
+yolo::BoxArray Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
 {
+
     auto objs = yolo->forward(yolo::Image((*image).data, (*image).cols, (*image).rows));
     std::ostringstream oss;
 
@@ -132,25 +133,108 @@ std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image
         // cv::rectangle(*image, cv::Point(obj.left - 3, obj.top - 33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
         // cv::putText(*image, caption, cv::Point(obj.left, obj.top - 5), 0, 1, cv::Scalar::all(0), 2, 16);
     }
-    return image;
+
+    cv::imshow("k4a", *image);
+    cv::waitKey(1);
+
+    return objs;
 }
 
-cv::Mat *Detect::seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
+yolo::BoxArray Detect::seg_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
 
 {
+
     auto objs = yolo->forward(yolo::Image((*image).data, (*image).cols, (*image).rows));
     cv::Mat *output;
 
     for (auto &obj : objs)
     {
-        uint8_t b, g, r;
-        std::tie(b, g, r) = yolo::random_color(obj.class_label);
+        if (obj.left >= 0 && obj.right < (*image).cols && obj.top >= 0 && obj.bottom <= (*image).rows)
+        {
+            uint8_t b, g, r;
+            std::tie(b, g, r) = yolo::random_color(obj.class_label);
 
-        // cv::rectangle(*image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
+            // cv::rectangle(*image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
 
-        output = new cv::Mat(obj.seg->height, obj.seg->width, CV_8U, obj.seg->data);
+            output = new cv::Mat(obj.seg->height, obj.seg->width, CV_8U, obj.seg->data);
 
-        return output;
+            cv::Mat mask = cv::Mat(obj.seg->height, obj.seg->width, CV_8U, obj.seg->data);
+            mask.convertTo(mask, CV_8UC1);
+            cv::resize(mask, mask, cv::Size(obj.right - obj.left, obj.bottom - obj.top), 0, 0, cv::INTER_LINEAR);
+            cv::cvtColor(mask, mask, cv::COLOR_GRAY2BGR);
+
+            mask.copyTo((*image)(cv::Rect(obj.left, obj.top, obj.right - obj.left, obj.bottom - obj.top)));
+        }
     }
-    return nullptr;
+
+    cv::imshow("test", *image);
+    cv::waitKey(1);
+
+    return objs;
+}
+
+void Detect::detect_boxes(yolo::BoxArray &bboxes, cv::Mat rgb, cv::Mat &cv_depth, k4a::transformation &k4aTransformation, k4a::calibration &k4aCalibration)
+{
+    int imgHeight = rgb.rows;
+    int imgWidth = rgb.cols;
+
+    int left, top, right, bottom;
+
+    cv::Rect select;
+
+    Lcloud lcloud;
+
+    uint8_t r, g, b;
+
+    if (bboxes.empty() || cv_depth.empty())
+        return;
+    if ((cv_depth.cols != 1280 && cv_depth.rows != 720))
+        return;
+
+    for (auto &box : bboxes)
+    {
+
+        left = (int)box.left;
+        if (left <= 0)
+            left = 0;
+
+        top = (int)box.top;
+        if (top <= 0)
+            top = 0;
+
+        right = (int)box.right;
+        if (right > imgWidth)
+            right = imgWidth;
+
+        bottom = (int)box.bottom;
+        if (bottom > imgHeight)
+            bottom = imgHeight;
+    }
+
+    select = cv::Rect(left, top, right - left, bottom - top);
+
+    cv::rectangle(rgb, cv::Point(left, top), cv::Point(right, bottom), cv::Scalar(b, g, r), 3);
+
+    cv::Mat mask = cv::Mat::zeros(rgb.size(), CV_8UC1);
+    cv::Mat output;
+    cv::cvtColor(rgb, output, cv::COLOR_BGR2HSV);
+    cv::inRange(output, cv::Scalar(156, 43, 46), cv::Scalar(180, 255, 255), mask);
+
+    cv::Mat depthCut = cv::Mat::zeros(cv::Size(imgWidth, imgHeight), CV_16U);
+
+    cv::Mat maskROI = mask(select);
+
+    cv_depth(select).copyTo(depthCut(select), maskROI);
+
+    cv::imshow("mask", maskROI);
+    cv::waitKey(1);
+
+    lcloud.getXYZPointCloud(k4aTransformation, k4aCalibration, depthCut);
+
+    lcloud.getPLY();
+
+    lcloud.clearCloud();
+
+    mask.release();
+    maskROI.release();
 }

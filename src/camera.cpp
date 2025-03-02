@@ -50,6 +50,7 @@ void Camera::init_kinect(k4a::device &device, k4a::capture &capture, k4a::transf
 
   k4aCalibration = device.get_calibration(init.depth_mode, init.color_resolution);
   k4aTransformation = k4a::transformation(k4aCalibration);
+  color_intrinsics = k4aCalibration.color_camera_calibration;
 
   int iAuto = 0;
   while (1)
@@ -114,6 +115,7 @@ cv::Mat *Camera::getdepth(k4a::device &device, k4a::capture &capture, cv::Mat &c
   k4a_depth = capture.get_depth_image();
 
   cv::Mat *output;
+
   k4a_tf_depth = k4aTransformation.depth_image_to_color_camera(k4a_depth);
 
   output = new Mat(k4a_tf_depth.get_height_pixels(), k4a_tf_depth.get_width_pixels(), CV_16U, k4a_tf_depth.get_buffer());
@@ -150,7 +152,7 @@ void Camera::camera_detect(cv::Mat cur_frame)
   cv::absdiff(pre_prame, cur_frame, diff);
 
   int frame_diff = cv::countNonZero(diff);
-  cout << frame_diff << endl;
+  // cout << frame_diff << endl;
 
   if (frame_diff == 0)
   {
@@ -167,4 +169,42 @@ void Camera::camera_detect(cv::Mat cur_frame)
   }
 
   pre_prame = cur_frame.clone();
+}
+
+void Camera::Value_Mask_to_Pcl(pcl::PointCloud<pcl::PointXYZ> &cloud, yolo::BoxArray &objs)
+{
+  cloud.clear();
+
+  if (objs.empty())
+  {
+    // std::cout << "Error: objs is empty!" << std::endl;
+    return;
+  }
+
+  uint16_t *depth_data = (uint16_t *)k4a_tf_depth.get_buffer();
+
+  yolo::Box boxBest = objs[0];
+  for (auto &box : objs)
+  {
+    if (box.confidence > boxBest.confidence)
+      boxBest = box;
+  }
+
+  for (int v = boxBest.top; v < boxBest.bottom; v++)
+  {
+    for (int u = boxBest.left; u < boxBest.right; u++)
+    {
+      if (boxBest.seg->data[u, v] == 0)
+      {
+        float depth_value = static_cast<float>(depth_data[v * k4a_tf_depth.get_width_pixels() + u] / 1000.0);
+        if (depth_value != 0)
+        {
+          float x = (u - color_intrinsics.intrinsics.parameters.param.cx) * depth_value / color_intrinsics.intrinsics.parameters.param.fx;
+          float y = (v - color_intrinsics.intrinsics.parameters.param.cy) * depth_value / color_intrinsics.intrinsics.parameters.param.fy;
+          float z = depth_value;
+          cloud.push_back(pcl::PointXYZ(x, y, z));
+        }
+      }
+    }
+  }
 }

@@ -27,12 +27,14 @@ set(cpp_srcs
     src/tcp.cpp
     src/can_send.cpp
     src/realsense.cpp
+    src/pcl.cpp
 )  
 
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(k4a REQUIRED)
 find_package(realsense2 REQUIRED)
+find_package(PCL 1.13 REQUIRED)
 # find_package(PythonLibs 3 REQUIRED)
 
 include_directories(
@@ -44,9 +46,11 @@ include_directories(
     # ${PYTHON_INCLUDE_DIR}
     # ${NUMPY_INCLUDES}
     inc
+     ${PCL_INCLUDE_DIRS}
     )
 
 link_directories(
+    ${PCL_LIBRARY_DIRS} 
     ${OpenCV_LIBS}
     ${realsense2_LIBRARY}
     ${CUDA_DIR}/lib64
@@ -69,6 +73,7 @@ target_link_libraries(pro  ${OpenCV_LIBS})
 target_link_libraries(pro  ${realsense2_LIBRARY})
 # target_link_libraries(pro  ${Python3_LIBRARIES})
 target_link_libraries(pro  k4a::k4a)
+target_link_libraries(pro  ${PCL_LIBRARIES})
 # add_custom_target(
 #         yolo
 #         DEPENDS camera
