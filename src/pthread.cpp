@@ -17,11 +17,9 @@
 RealSense *realsense = new RealSense;
 Camera *camera = new Camera;
 Detect *detect = new Detect;
-<<<<<<< HEAD
 Lcloud *lcloud = new Lcloud;
-=======
+
 extern Filter *filter;
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 
 cv::Mat rgb_frame, depth_frame;
 cv::Mat *rgb_ptr = new cv::Mat;
@@ -51,11 +49,7 @@ void *pthread::k4aUpdate(void *argc)
     {
         std::ostringstream filename;
 
-<<<<<<< HEAD
         // filename << "/home/ddxy/Downloads/picture/frame_ " << std::setw(5) << std::setfill('0') << frame_count++ << ".jpg ";
-=======
-        filename << "/home/ddxy/Downloads/basketball5/train" << std::setw(5) << std::setfill('0') << frame_count++ << ".jpg ";
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 
         camera->picture_update(Device, capture);
 
@@ -151,11 +145,9 @@ void *pthread::realsenseUpdate(void *argc)
 
 void *pthread::create_infer(void *argc)
 {
-<<<<<<< HEAD
+
     auto yolo = yolo::load("/home/ddxy/dxy_infer-master/workspace/engine/1.engine", yolo::Type::V8);
-=======
-    auto yolo = yolo::load("/home/ddxy/Downloads/dxy_infer-master/workspace/engine/basketball.engine", yolo::Type::V8);
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
+
     if (yolo == nullptr)
     {
         throw std::runtime_error("Loading yolo failed");
@@ -172,8 +164,11 @@ void *pthread::create_infer(void *argc)
     {
         while (!depthBuff->empty())
         {
+            clock_t start, end;
+            auto yoloStart = std::chrono::system_clock::now();
+
             pthread_mutex_lock(&buff_mutex);
-<<<<<<< HEAD
+
             *objs_ptr = detect->single_inference(matBuff, yolo);
 
             if (objs_ptr != nullptr)
@@ -181,14 +176,15 @@ void *pthread::create_infer(void *argc)
                 detect->detect_boxes(*objs_ptr, *matBuff, *depthBuff, k4aTransformation, k4aCalibration);
             }
 
-=======
-            output = detect->single_inference(matBuff, yolo, kf);
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
             pthread_mutex_unlock(&buff_mutex);
             usleep(100);
 
             cv::imshow("k4a", *matBuff);
             cv::waitKey(1);
+
+            auto yoloEnd = std::chrono::system_clock::now();
+            auto yoloDuration = std::chrono::duration_cast<std::chrono::microseconds>(yoloEnd - yoloStart);
+            std::cout << "yolo:" << double(yoloDuration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den << "s" << std::endl;
         }
     }
     pthread_exit(NULL);
@@ -258,17 +254,15 @@ void *pthread::create_infer_seg(void *argc)
 
 //         capture.read(*frame);
 
-<<<<<<< HEAD
-        pthread_mutex_lock(&buff_mutex);
-        // output = detect->single_inference(frame, yolo);
-        pthread_mutex_unlock(&buff_mutex);
-        usleep(100);
-=======
+// pthread_mutex_lock(&buff_mutex);
+// output = detect->single_inference(frame, yolo);
+// pthread_mutex_unlock(&buff_mutex);
+// usleep(100);
+
 //         pthread_mutex_lock(&buff_mutex);
 //         output = detect->single_inference(frame, yolo);
 //         pthread_mutex_unlock(&buff_mutex);
 //         usleep(100);
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 
 //         if (output != nullptr)
 //         {

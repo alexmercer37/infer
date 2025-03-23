@@ -29,7 +29,7 @@ void Lcloud::getXYZPointCloud(const k4a::transformation &k4aTransformation, cons
 
     auto *xyzImageData = (int16_t *)(void *)xyzImage.get_buffer();
 
-    for (int i = 0; i < width * height; i++)
+    for (int i = 0; i < width * height; i += 2)
     {
         if (xyzImageData[3 * i + 2] == 0 || xyzImageData[3 * i + 2] >= 5000) // 要4m内
 
@@ -194,7 +194,7 @@ Circle3D Lcloud::fitCircleLM(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr, doub
 void Lcloud::getPLY()
 {
 
-    Eigen::Vector4f leaf_size{20, 20, 20, 0};
+    Eigen::Vector4f leaf_size{35, 35, 35, 0};
 
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
 
@@ -227,15 +227,15 @@ void Lcloud::getPLY()
     std::cout << "PCL:点的个数" << source_downsampled->size() << std::endl;
 
     sor.setInputCloud(source_downsampled);
-    sor.setMeanK(100);
-    sor.setStddevMulThresh(1);
+    sor.setMeanK(60);
+    sor.setStddevMulThresh(3);
     sor.filter(*source_downsampled);
 
     seg.setOptimizeCoefficients(true);
     seg.setModelType(pcl::SACMODEL_CIRCLE3D);
     seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setDistanceThreshold(50);
-    seg.setMaxIterations(20000);
+    seg.setDistanceThreshold(500);
+    seg.setMaxIterations(10000);
     seg.setInputCloud(source_downsampled);
     seg.segment(*inliers_circle, *coefficients_circle);
 

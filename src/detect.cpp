@@ -98,13 +98,8 @@ void Detect::batch_inference()
     }
 }
 
-<<<<<<< HEAD
 yolo::BoxArray Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo)
-=======
-std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image, std::shared_ptr<yolo::Infer> yolo, cv::KalmanFilter &kf)
->>>>>>> 32b05f84d0eac917060bc12f21c72abf15bb5887
 {
-
     auto objs = yolo->forward(yolo::Image((*image).data, (*image).cols, (*image).rows));
     std::ostringstream oss;
 
@@ -131,9 +126,9 @@ std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image
         cv::rectangle(*image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), color, 5);
         // cv::circle(*image, cv::Point(obj.left + (obj.right - obj.left) / 2, obj.bottom + (obj.top - obj.bottom) / 2), 5, cv::Scalar(255, 0, 0), -1);
 
-        std::vector<cv::Point2f> measurements;
-        measurements.push_back(cv::Point2f(obj.left + (obj.right - obj.left) / 2, obj.bottom + (obj.top - obj.bottom) / 2));
-        filter->filter_predict(measurements, kf, *image);
+        // std::vector<cv::Point2f> measurements;
+        // measurements.push_back(cv::Point2f(obj.left + (obj.right - obj.left) / 2, obj.bottom + (obj.top - obj.bottom) / 2));
+        // filter->filter_predict(measurements, kf, *image);
 
         std::cout << "success!" << std::endl;
 #endif
@@ -145,7 +140,7 @@ std::shared_ptr<cv::Mat> Detect::single_inference(std::shared_ptr<cv::Mat> image
 
         // cv::rectangle(*image, cv::Point(obj.left - 3, obj.top - 33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
         // cv::putText(*image, caption, cv::Point(obj.left, obj.top - 5), 0, 1, cv::Scalar::all(0), 2, 16);
-    }
+}
 
     cv::imshow("k4a", *image);
     cv::waitKey(1);
