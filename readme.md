@@ -1,4 +1,4 @@
-# dxy-infer配置
+# infer配置
 ### locate的问题
 ubuntu可以利用locate进行目标文件定位，但在使用过程中出现了添加或者删除文件不及时的问题，需要对数据库进行更新，因为locate指令是针对数据库运行的
 > https://blog.csdn.net/accumulate_zhang/article/details/77587136
